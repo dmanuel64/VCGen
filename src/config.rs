@@ -1,6 +1,9 @@
+use clap::Parser;
 use std::path::PathBuf;
 
-use clap::Parser;
+const DEFAULT_FLAWFINDER_PATH: &str = "/usr/bin/flawfinder";
+const DEFAULT_CPPCHECK_PATH: &str = "/usr/bin/cppcheck";
+const DEFAULT_INFER_PATH: &str = "/usr/bin/infer";
 
 #[derive(Parser)]
 #[clap(name = "Vulnerable Code Dataset Generator")]
@@ -13,8 +16,26 @@ pub struct CommandLineArgs {
     /// Path to save the dataset at
     dataset_file: PathBuf,
     /// Ratio of vulnerable code entries to benign code entries
-    #[clap(short, long, parse(try_from_str = positive_percentage), default_value_t = 0.5)]
-    vulnerability_ratio: f32,
+    #[clap(short, long, parse(try_from_str = positive_percentage), value_name = "VULNERABILITY", default_value_t = 0.5)]
+    ratio: f32,
+    /// Path to Flawfinder
+    #[clap(long, value_name = "PATH", default_value = DEFAULT_FLAWFINDER_PATH)]
+    flawfinder_path: String,
+    /// Will not use Flawfinder in creating the dataset
+    #[clap(long)]
+    disable_flawfinder: bool,
+    /// Path to Cppcheck
+    #[clap(long, value_name = "PATH", default_value = DEFAULT_CPPCHECK_PATH)]
+    cppcheck_path: String,
+    /// Will not use Cppcheck in creating the dataset
+    #[clap(long)]
+    disable_cppcheck: bool,
+    /// Path to Infer
+    #[clap(long, value_name = "PATH", default_value = DEFAULT_INFER_PATH)]
+    infer_path: String,
+    /// Will not use Infer in creating the dataset
+    #[clap(long)]
+    disable_infer: bool,
 }
 
 impl CommandLineArgs {
@@ -26,8 +47,8 @@ impl CommandLineArgs {
         &self.dataset_file
     }
 
-    pub fn vulnerability_ratio(&self) -> f32 {
-        self.vulnerability_ratio
+    pub fn ratio(&self) -> f32 {
+        self.ratio
     }
 }
 

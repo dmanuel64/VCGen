@@ -9,4 +9,6 @@ edition = "2018"
 clap = { version = "3.1.18", features = ["derive"] }
 octocrab = "0.16.0"
 tokio = { version = "1.19.2", features = ["rt-multi-thread", "macros"] }
+git2 = "0.14.4"
+tempfile = "3.3.0"
 regex = "1"

@@ -10,7 +10,7 @@ fn main() {
     let _results = create_dataset(
         args.entries(),
         &args.dataset_file(),
-        args.vulnerability_ratio(),
+        args.ratio(),
         false,
     );
     println!("Hello, world!");
