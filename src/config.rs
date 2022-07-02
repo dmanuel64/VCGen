@@ -36,6 +36,8 @@ pub struct CommandLineArgs {
     /// Will not use Infer in creating the dataset
     #[clap(long)]
     disable_infer: bool,
+    #[clap(short, long, value_name = "AMOUNT", parse(try_from_str = positive_value), default_value_t = 4)]
+    worker_threads: i32,
 }
 
 impl CommandLineArgs {
@@ -49,6 +51,10 @@ impl CommandLineArgs {
 
     pub fn ratio(&self) -> f32 {
         self.ratio
+    }
+
+    pub fn worker_threads(&self) -> i32 {
+        self.worker_threads
     }
 }
 

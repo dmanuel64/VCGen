@@ -11,7 +11,7 @@ fn main() {
         args.entries(),
         &args.dataset_file(),
         args.ratio(),
-        false,
+        args.worker_threads(),
     );
     println!("Hello, world!");
 }
