@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use clap::Parser;
 
 #[derive(Parser)]
@@ -8,6 +10,8 @@ pub struct CommandLineArgs {
     /// Number of dataset entries
     #[clap(parse(try_from_str = positive_value))]
     entries: i32,
+    /// Path to save the dataset at
+    dataset_file: PathBuf,
     /// Ratio of vulnerable code entries to benign code entries
     #[clap(short, long, parse(try_from_str = positive_percentage), default_value_t = 0.5)]
     vulnerability_ratio: f32,
