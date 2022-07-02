@@ -17,6 +17,20 @@ pub struct CommandLineArgs {
     vulnerability_ratio: f32,
 }
 
+impl CommandLineArgs {
+    pub fn entries(&self) -> i32 {
+        self.entries
+    }
+
+    pub fn dataset_file(&self) -> &PathBuf {
+        &self.dataset_file
+    }
+
+    pub fn vulnerability_ratio(&self) -> f32 {
+        self.vulnerability_ratio
+    }
+}
+
 fn positive_value(arg: &str) -> Result<i32, String> {
     let parsed_value: Result<i32, _> = arg.parse();
     parsed_value
