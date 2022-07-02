@@ -7,4 +7,5 @@ edition = "2018"
 
 [dependencies]
 clap = { version = "3.1.18", features = ["derive"] }
+octocrab = "0.16.0"
 regex = "1"
