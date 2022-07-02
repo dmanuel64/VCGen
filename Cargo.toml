@@ -8,4 +8,5 @@ edition = "2018"
 [dependencies]
 clap = { version = "3.1.18", features = ["derive"] }
 octocrab = "0.16.0"
+tokio = { version = "1.19.2", features = ["rt-multi-thread", "macros"] }
 regex = "1"
