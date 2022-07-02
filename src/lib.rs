@@ -1,7 +1,9 @@
-use git::search::TrendingRepositories;
+use git::{search::TrendingRepositories, vulnerability::VulnerableCommits};
+use vulnerability::tools::Flawfinder;
 use std::path::Path;
 
 mod git;
+mod vulnerability;
 
 pub fn create_dataset(
     entries: i32,
