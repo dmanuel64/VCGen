@@ -12,5 +12,10 @@ pub fn create_dataset(
     quiet: bool,
 ) -> Result<(), String> {
     let trending_repos = TrendingRepositories::default();
+    for git_url in trending_repos.repos() {
+        let commits = VulnerableCommits::new(&git_url, vec![Box::new(Flawfinder)]);
+        assert!(commits.unwrap().repo_dir.path().exists());
+        break;
+    }
     Ok(())
 }
