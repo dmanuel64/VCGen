@@ -54,7 +54,9 @@ pub fn create_dataset(
         }));
         slice_start += slice_size;
     }
-    vulnerability_progress.join_and_clear();
+    vulnerability_progress
+        .join_and_clear()
+        .or_else(|err| Err(err.to_string()))?;
     for worker in workers {
         worker.join().unwrap();
     }
