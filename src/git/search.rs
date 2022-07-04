@@ -48,11 +48,13 @@ impl TrendingRepositories {
             .await
     }
 
-    pub fn repos(&self) -> Vec<String> {
+    pub fn repos(&self, size_limit: Option<u32>) -> Vec<String> {
         let mut repos_urls: Vec<String> = Vec::new();
         for repo in &self.current_page {
-            if let Some(git_url) = repo.clone_url.clone() {
-                repos_urls.push(git_url.to_string());
+            if repo.size.unwrap_or_default() < size_limit.unwrap_or_else(|| u32::MAX) {
+                if let Some(git_url) = repo.clone_url.clone() {
+                    repos_urls.push(git_url.to_string());
+                }
             }
         }
         repos_urls

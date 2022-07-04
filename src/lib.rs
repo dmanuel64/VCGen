@@ -27,12 +27,13 @@ pub fn create_dataset(
     dataset_path: &Path,
     vulnerability_ratio: f32,
     worker_threads: i32,
+    max_repo_size: Option<u32>,
 ) -> Result<(), String> {
     // get git URLs of trending repositories from GitHub
     let trending_repos = with_progress_spinner("Fetching popular C repositories.", || {
         TrendingRepositories::default()
     });
-    let trending_git_urls = Arc::new(trending_repos.repos());
+    let trending_git_urls = Arc::new(trending_repos.repos(max_repo_size));
     // divide vulnerability scanning among worker threads
     let vulnerability_progress = Arc::new(MultiProgress::new());
     let slice_size = trending_git_urls.len() / worker_threads as usize;

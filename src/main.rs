@@ -12,6 +12,7 @@ fn main() {
         &args.dataset_file(),
         args.ratio(),
         args.worker_threads(),
+        args.max_repo_size(),
     );
     println!("Hello, world!");
 }

@@ -1,4 +1,4 @@
-use clap::Parser;
+use clap::{ArgGroup, Parser};
 use std::path::PathBuf;
 
 const DEFAULT_FLAWFINDER_PATH: &str = "/usr/bin/flawfinder";
@@ -9,6 +9,21 @@ const DEFAULT_INFER_PATH: &str = "/usr/bin/infer";
 #[clap(name = "Vulnerable Code Dataset Generator")]
 #[clap(author = "Dylan Manuel", version = "1.0")]
 #[clap(about = "Does awesome things", long_about = None)]
+#[clap(group(
+    ArgGroup::new("flawfinder")
+        .required(false)
+        .args(&["flawfinder-path", "disable-flawfinder"]),
+))]
+#[clap(group(
+    ArgGroup::new("cppcheck")
+        .required(false)
+        .args(&["cppcheck-path", "disable-cppcheck"]),
+))]
+#[clap(group(
+    ArgGroup::new("infer")
+        .required(false)
+        .args(&["infer-path", "disable-infer"]),
+))]
 pub struct CommandLineArgs {
     /// Number of dataset entries
     #[clap(parse(try_from_str = positive_value))]
@@ -38,6 +53,8 @@ pub struct CommandLineArgs {
     disable_infer: bool,
     #[clap(short, long, value_name = "AMOUNT", parse(try_from_str = positive_value), default_value_t = 4)]
     worker_threads: i32,
+    #[clap(long, value_name = "KB")]
+    max_repo_size: Option<u32>,
 }
 
 impl CommandLineArgs {
@@ -55,6 +72,10 @@ impl CommandLineArgs {
 
     pub fn worker_threads(&self) -> i32 {
         self.worker_threads
+    }
+
+    pub fn max_repo_size(&self) -> Option<u32> {
+        self.max_repo_size
     }
 }
 
