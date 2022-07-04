@@ -61,7 +61,7 @@ pub fn create_dataset(
                 vulnerable_code.append(
                     &mut VulnerableCommits::new(git_url, &repo_dir, Some(&worker_progress))
                         .and_then(|vc| {
-                            vc.vulnerable_code2(
+                            vc.vulnerable_code(
                                 vec![Box::new(Flawfinder::default())],
                                 Some(worker_quota),
                                 Some(&worker_progress),
