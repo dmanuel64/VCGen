@@ -51,7 +51,7 @@ impl TrendingRepositories {
     pub fn repos(&self) -> Vec<String> {
         let mut repos_urls: Vec<String> = Vec::new();
         for repo in &self.current_page {
-            if let Some(git_url) = repo.git_url.clone() {
+            if let Some(git_url) = repo.clone_url.clone() {
                 repos_urls.push(git_url.to_string());
             }
         }

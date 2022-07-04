@@ -1,5 +1,5 @@
 use git::{search::TrendingRepositories, vulnerability::VulnerableCommits};
-use indicatif::{MultiProgress, ProgressBar};
+use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use std::{
     path::Path,
     sync::Arc,
@@ -33,7 +33,7 @@ pub fn create_dataset(
         TrendingRepositories::default()
     });
     let trending_git_urls = Arc::new(trending_repos.repos());
-    // divide among worker threads
+    // divide vulnerability scanning among worker threads
     let vulnerability_progress = Arc::new(MultiProgress::new());
     let slice_size = trending_git_urls.len() / worker_threads as usize;
     let mut slice_start = 0;
@@ -41,16 +41,39 @@ pub fn create_dataset(
     let mut workers = vec![];
     for worker in 0..worker_threads {
         let trending_git_urls = Arc::clone(&trending_git_urls);
-        let pb = ProgressBar::new_spinner();
-        pb.set_message(format!("Doing something in thread {worker}"));
-        pb.enable_steady_tick(125);
+        let pb = ProgressBar::new(worker_quota as u64);
+        pb.set_style(
+            ProgressStyle::default_bar()
+                .template("[{elapsed_precise}] {bar:40.green/yellow} {pos:>7}/{len:7} {wide_msg}"),
+        );
         let worker_progress = vulnerability_progress.add(pb);
-        // let vulnerability_progress = Arc::clone(&vulnerability_progress);
         workers.push(thread::spawn(move || {
-            //for git_url in &trending_git_urls[slice_start..2] {
-            sleep(core::time::Duration::from_millis(3000));
+            let slice_end = if slice_start + slice_size < trending_git_urls.len() {
+                slice_start + slice_size
+            } else {
+                trending_git_urls.len()
+            };
+            let mut vulnerable_code = vec![];
+            for git_url in &trending_git_urls[slice_start..slice_end] {
+                vulnerable_code.append(
+                    &mut VulnerableCommits::new(git_url, Some(&worker_progress))
+                        .and_then(|vc| {
+                            vc.vulnerable_code(
+                                vec![Box::new(Flawfinder::default())],
+                                Some(worker_quota),
+                                Some(&worker_progress),
+                            )
+                        })
+                        .unwrap_or_else(|err| {
+                            worker_progress
+                                .set_message(format!("Could not find vulnerable commits: {err}"));
+                            sleep(core::time::Duration::from_millis(3000));
+                            vec![]
+                        }),
+                );
+                break;
+            }
             worker_progress.finish_using_style();
-            //}
         }));
         slice_start += slice_size;
     }
