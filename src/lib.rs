@@ -10,6 +10,7 @@ use vulnerability::tools::Flawfinder;
 
 mod git;
 mod vulnerability;
+mod dataset;
 
 fn with_progress_spinner<F, R>(msg: &'static str, f: F) -> R
 where
