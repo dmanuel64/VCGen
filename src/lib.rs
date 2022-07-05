@@ -81,6 +81,7 @@ pub fn create_dataset(
                 // break;
             }
             worker_progress.finish_using_style();
+            vulnerable_code
         }));
         slice_start += slice_size;
     }
@@ -88,11 +89,7 @@ pub fn create_dataset(
         .join_and_clear()
         .or_else(|err| Err(err.to_string()))?;
     for worker in workers {
-        worker.join().unwrap();
+        println!("{}", worker.join().unwrap().len())
     }
-    // for git_url in trending_repos.repos() {
-    //     let commits = VulnerableCommits::new(&git_url, vec![Box::new(Flawfinder)]);
-    //     break;
-    // }
     Ok(())
 }
