@@ -1,3 +1,4 @@
+use dataset::vulnerabilities::create_dataset as generate_dataset;
 use git::{search::TrendingRepositories, vulnerability::VulnerableCommits};
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use std::{
@@ -7,6 +8,8 @@ use std::{
 };
 use tempfile::tempdir;
 use vulnerability::tools::Flawfinder;
+
+use crate::{dataset::vulnerabilities::save_dataset, git::vulnerability::AnalyzedCode};
 
 mod git;
 mod vulnerability;
@@ -36,6 +39,7 @@ pub fn create_dataset(
         TrendingRepositories::default()
     });
     let trending_git_urls = Arc::new(trending_repos.repos(max_repo_size));
+    let mut vulnerabilities = vec![];
     // divide vulnerability scanning among worker threads
     let vulnerability_progress = Arc::new(MultiProgress::new());
     let slice_size = trending_git_urls.len() / worker_threads as usize;
@@ -86,11 +90,17 @@ pub fn create_dataset(
         }));
         slice_start += slice_size;
     }
+    // Retrieve vulnerabilities from worker threads
     vulnerability_progress
         .join_and_clear()
         .or_else(|err| Err(err.to_string()))?;
     for worker in workers {
-        println!("{}", worker.join().unwrap().len())
+        vulnerabilities.extend(worker.join().unwrap());
     }
+    // Create dataset
+    vulnerabilities.push(AnalyzedCode::default());
+    let mut df = generate_dataset(vulnerabilities, None);
+    println!("{}", &df.head(None));
+    save_dataset(&mut df, Path::new("foo.csv"));
     Ok(())
 }
