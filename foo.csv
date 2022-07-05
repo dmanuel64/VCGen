@@ -1,4 +1,0 @@
-GitHub URL,Commit Hash,File,Code,Flawfinder Vulnerabilities,Flawfinder CWEs
-https://github.com/test,abcd1234,main.c,"int main(char **args) {
-                    printf(""Hello, world."");
-            }",Error: test123 Error: testabc,
