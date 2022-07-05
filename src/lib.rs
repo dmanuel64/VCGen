@@ -49,6 +49,7 @@ pub fn create_dataset(
                 .template("[{elapsed_precise}] {bar:40.green/yellow} {pos:>7}/{len:7} {wide_msg}"),
         );
         let worker_progress = vulnerability_progress.add(pb);
+        worker_progress.enable_steady_tick(1000);
         workers.push(thread::spawn(move || {
             let slice_end = if slice_start + slice_size < trending_git_urls.len() {
                 slice_start + slice_size
