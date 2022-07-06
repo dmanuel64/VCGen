@@ -58,11 +58,15 @@ dependencies = [
  "bytemuck",
  "chrono",
  "either",
+ "fallible-streaming-iterator",
  "hash_hasher",
+ "indexmap",
+ "json-deserializer",
  "lexical-core",
  "multiversion",
  "num-traits",
  "simdutf8",
+ "streaming-iterator",
  "strength_reduce",
 ]
 
@@ -387,6 +391,12 @@ checksum = "9852635589dc9f9ea1b6fe9f05b50ef208c85c834a562f0c6abb1c475736ec2b"
 dependencies = [
  "cfg-if",
 ]
+
+[[package]]
+name = "fallible-streaming-iterator"
+version = "0.1.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7360491ce676a36bf9bb3c56c1aa791658183a54d2744120f27285738d90465a"
 
 [[package]]
 name = "fastrand"
@@ -722,6 +732,12 @@ checksum = "c3fac17f7123a73ca62df411b1bf727ccc805daa070338fda671c86dac1bdc27"
 dependencies = [
  "wasm-bindgen",
 ]
+
+[[package]]
+name = "json-deserializer"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "47631885425c482fcf2dc4b182fc973c3c5b81a8f43a028055559bd24cccfa6e"
 
 [[package]]
 name = "jsonwebtoken"
@@ -1307,6 +1323,7 @@ dependencies = [
  "polars-utils",
  "rayon",
  "regex",
+ "serde_json",
  "simdutf8",
 ]
 
@@ -1793,6 +1810,12 @@ name = "static_assertions"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
+
+[[package]]
+name = "streaming-iterator"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4817bfdf8f0b576330b83b55bed0ec89204aa7da62c2fa11fad2119f33a70014"
 
 [[package]]
 name = "strength_reduce"

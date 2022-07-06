@@ -3,7 +3,7 @@ use indicatif::ProgressBar;
 use polars::{
     datatypes::{DataType, Utf8Chunked},
     io::SerWriter,
-    prelude::{CsvWriter, DataFrame, IntoSeries, NamedFrom, Series},
+    prelude::{CsvWriter, DataFrame, IntoSeries, JsonWriter, NamedFrom, Series},
 };
 use std::{fs::File, iter::FromIterator, path::Path};
 
@@ -72,5 +72,5 @@ pub fn create_dataset(
 
 pub fn save_dataset(df: &mut DataFrame, dataset_path: &Path) {
     let f = File::create(dataset_path).unwrap();
-    CsvWriter::new(f).with_quoting_char('"' as u8).finish(df);
+    JsonWriter::new(f).finish(df);
 }
