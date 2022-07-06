@@ -98,9 +98,9 @@ pub fn create_dataset(
         vulnerabilities.extend(worker.join().unwrap());
     }
     // Create dataset
-    vulnerabilities.push(AnalyzedCode::default());
+    // vulnerabilities.push(AnalyzedCode::default());
     let mut df = generate_dataset(vulnerabilities, None);
     println!("{}", &df.head(None));
-    save_dataset(&mut df, Path::new("foo.jsonl"));
+    save_dataset(&mut df, dataset_path);
     Ok(())
 }
