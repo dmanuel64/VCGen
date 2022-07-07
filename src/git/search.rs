@@ -1,15 +1,12 @@
 use octocrab::{models::Repository, Octocrab, Page};
-use std::{
-    env::{var, VarError},
-    error::Error,
-};
+use std::env::var;
 
 const GITHUB_API_VAR: &str = "GITHUB_API_TOKEN";
 
 /// Gets the user's GitHub API token by retrieving the value
 /// set by environment variable GITHUB_API_TOKEN.
-pub fn github_api_token() -> Result<String, VarError> {
-    var(GITHUB_API_VAR)
+pub fn github_api_token() -> Option<String> {
+    var(GITHUB_API_VAR).ok()
 }
 
 /// Structure containing functionality to collect popular repositories of
@@ -26,7 +23,9 @@ impl TrendingRepositories {
     /// using a specified language.
     pub fn new(language: &str) -> Result<Self, String> {
         // Build GitHub API client using a personal access token
-        let access_token = github_api_token().or_else(|err| Err(err.to_string()))?;
+        let access_token = github_api_token().ok_or(String::from(
+            "Could not get GitHub API personal access token.",
+        ))?;
         let github = Octocrab::builder()
             .personal_token(access_token)
             .build()
