@@ -64,7 +64,7 @@ pub fn create_dataset(
             for git_url in &trending_git_urls[slice_start..slice_end] {
                 let repo_dir = tempdir().unwrap();
                 vulnerable_code.append(
-                    &mut VulnerableCommits::new(git_url, &repo_dir, Some(&worker_progress))
+                    &mut VulnerableCommits::new(git_url, &repo_dir, Some(&worker_progress), None)
                         .and_then(|vc| {
                             vc.vulnerable_code(
                                 vec![Box::new(Flawfinder::default())],
