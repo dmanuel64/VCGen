@@ -1,8 +1,19 @@
 use octocrab::{models::Repository, Octocrab, Page};
-use std::env::var;
+use std::{
+    env::{var, VarError},
+    error::Error,
+};
 
 const GITHUB_API_VAR: &str = "GITHUB_API_TOKEN";
 
+/// Gets the user's GitHub API token by retrieving the value
+/// set by environment variable GITHUB_API_TOKEN.
+pub fn github_api_token() -> Result<String, VarError> {
+    var(GITHUB_API_VAR)
+}
+
+/// Structure containing functionality to collect popular repositories of
+/// a specified language.
 pub struct TrendingRepositories {
     language: String,
     github: Octocrab,
@@ -11,18 +22,19 @@ pub struct TrendingRepositories {
 }
 
 impl TrendingRepositories {
-    pub fn new(language: &str, api_token: &str) -> Result<Self, String> {
+    /// Gathers the first page of trending repositories from GitHub.com
+    /// using a specified language.
+    pub fn new(language: &str) -> Result<Self, String> {
+        // Build GitHub API client using a personal access token
+        let access_token = github_api_token().or_else(|err| Err(err.to_string()))?;
         let github = Octocrab::builder()
-            .personal_token(String::from(api_token))
+            .personal_token(access_token)
             .build()
             .or_else(|_| Err(String::from("Could not create GitHub API client.")))?;
+        // Get trending repositories from the first page of trending repos
         let page_number = 1;
-        let current_page =
-            Self::trending_repos_page(&github, language, page_number).or_else(|_| {
-                Err(String::from(format!(
-                    "Could not load trending {language} repositories."
-                )))
-            })?;
+        let current_page = Self::trending_repos_page(&github, language, page_number)
+            .or_else(|_| Err(format!("Could not load trending {language} repositories.")))?;
         Ok(Self {
             language: String::from(language),
             github: github,
@@ -31,12 +43,17 @@ impl TrendingRepositories {
         })
     }
 
+    /// Gets the top trending repositories of a language using the GitHub
+    /// API client and specifying which page of results to collect from.
     #[tokio::main]
     async fn trending_repos_page(
         github: &Octocrab,
         language: &str,
         page: i32,
     ) -> Result<Page<Repository>, octocrab::Error> {
+        // Search repositories using the specified language, sorting by
+        // most stars (rating), in descending order (from most popular to least popular),
+        // with 100 results (API limit) per page
         github
             .search()
             .repositories(&format!("language:{language}"))
@@ -48,11 +65,16 @@ impl TrendingRepositories {
             .await
     }
 
+    /// Gets the GitHub URLs of trending repositories of the set language,
+    /// optionally limiting the results to repositories under a certain
+    /// amount of KBs.
     pub fn repos(&self, size_limit: Option<u32>) -> Vec<String> {
         let mut repos_urls: Vec<String> = Vec::new();
         for repo in &self.current_page {
+            // Check if repository size is under the specified amount
             if repo.size.unwrap_or_default() < size_limit.unwrap_or_else(|| u32::MAX) {
-                if let Some(git_url) = repo.clone_url.clone() {
+                if let Some(git_url) = &repo.clone_url {
+                    // Add URL
                     repos_urls.push(git_url.to_string());
                 }
             }
@@ -74,13 +96,9 @@ impl TrendingRepositories {
 }
 
 impl Default for TrendingRepositories {
+    /// Collects trending C repositories from GitHub
     fn default() -> Self {
-        Self::new(
-            "c",
-            &var(GITHUB_API_VAR).expect(&format!(
-                "Could not get value of environment variable {GITHUB_API_VAR}"
-            )),
-        )
-        .expect("Could not get Trending Repositories with default settings.")
+        Self::new("c")
+            .expect("Could not get trending C repositories from GitHub.com with default settings.")
     }
 }

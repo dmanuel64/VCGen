@@ -9,7 +9,7 @@ use std::{
 use tempfile::tempdir;
 use vulnerability::tools::Flawfinder;
 
-use crate::{dataset::vulnerabilities::save_dataset, git::vulnerability::AnalyzedCode};
+use crate::{dataset::vulnerabilities::save_dataset};
 
 mod git;
 mod vulnerability;
