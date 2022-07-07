@@ -1,3 +1,4 @@
+use crate::dataset::vulnerabilities::save_dataset;
 use dataset::vulnerabilities::create_dataset as generate_dataset;
 use git::{search::TrendingRepositories, vulnerability::VulnerableCommits};
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
@@ -8,13 +9,11 @@ use std::{
 };
 use tempfile::tempdir;
 use vulnerability::tools::Flawfinder;
-
-use crate::{dataset::vulnerabilities::save_dataset};
-
+mod dataset;
 mod git;
 mod vulnerability;
-mod dataset;
 
+/// Completes a closure with a progress spinner running
 fn with_progress_spinner<F, R>(msg: &'static str, f: F) -> R
 where
     F: FnOnce() -> R,
@@ -40,13 +39,13 @@ pub fn create_dataset(
     });
     let trending_git_urls = Arc::new(trending_repos.repos(max_repo_size));
     let mut vulnerabilities = vec![];
-    // divide vulnerability scanning among worker threads
+    // divide vulnerability scanning equally among worker threads
     let vulnerability_progress = Arc::new(MultiProgress::new());
     let slice_size = trending_git_urls.len() / worker_threads as usize;
     let mut slice_start = 0;
     let worker_quota = entries / worker_threads;
     let mut workers = vec![];
-    for worker in 0..worker_threads {
+    for _ in 0..worker_threads {
         let trending_git_urls = Arc::clone(&trending_git_urls);
         let pb = ProgressBar::new(worker_quota as u64);
         pb.set_style(
