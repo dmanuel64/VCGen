@@ -1,7 +1,7 @@
 use octocrab::{models::Repository, Octocrab, Page};
 use std::env::var;
 
-const GITHUB_API_VAR: &str = "GITHUB_API_TOKEN";
+pub const GITHUB_API_VAR: &str = "GITHUB_API_TOKEN";
 
 /// Gets the user's GitHub API token by retrieving the value
 /// set by environment variable GITHUB_API_TOKEN.

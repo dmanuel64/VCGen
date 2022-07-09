@@ -1,10 +1,13 @@
 use crate::dataset::vulnerabilities::save_dataset;
 use dataset::vulnerabilities::create_dataset as generate_dataset;
-use git::{search::TrendingRepositories, vulnerability::VulnerableCommits};
+use git::{
+    search::{github_api_token, TrendingRepositories, GITHUB_API_VAR},
+    vulnerability::VulnerableCommits,
+};
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use std::{path::Path, sync::Arc, thread};
 use tempfile::tempdir;
-use vulnerability::tools::Flawfinder;
+use vulnerability::tools::{Flawfinder, FLAWFINDER_ENV_VAR};
 mod dataset;
 mod git;
 mod utils;
@@ -21,6 +24,27 @@ where
     let result = f();
     spinner.finish_using_style();
     result
+}
+
+pub fn check_dependencies(skip_flawfinder: bool) -> Result<(), String> {
+    if github_api_token().is_none() {
+        Err(format!(
+            "You must set the {} environment variable to your GitHub API personal access token.",
+            GITHUB_API_VAR
+        ))
+    } else if !skip_flawfinder && Flawfinder::install_location().is_none() {
+        Err(format!(
+            "Flawfinder is not installed. {}{}{}",
+            "Install Flawfinder with\n\nsudo apt-get install flawfinder\n\n",
+            "Download it from https://dwheeler.com/flawfinder/",
+            format!(
+                "Or set the {} environment variable of the path to the Flawfinder executable.",
+                FLAWFINDER_ENV_VAR
+            )
+        ))
+    } else {
+        Ok(())
+    }
 }
 
 pub fn create_dataset(
@@ -64,14 +88,14 @@ pub fn create_dataset(
                     &mut VulnerableCommits::new(git_url, &repo_dir, Some(&worker_progress), None)
                         .and_then(|vc| {
                             vc.vulnerable_code(
-                                &vec![&Flawfinder::default()],
+                                &vec![&Flawfinder::new()],
                                 Some(worker_quota as usize),
                                 Some(&worker_progress),
                             )
                         })
                         .unwrap_or_else(|err| {
                             worker_progress
-                                .set_message(format!("Could not find vulnerable commits: {err}"));
+                                .set_message(format!("Could not get vulnerable commits: {err}"));
                             vec![]
                         }),
                 );

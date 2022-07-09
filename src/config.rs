@@ -1,31 +1,12 @@
-use clap::{ArgGroup, Parser};
+use clap::Parser;
 use std::path::PathBuf;
-
-const DEFAULT_FLAWFINDER_PATH: &str = "/usr/bin/flawfinder";
-const DEFAULT_CPPCHECK_PATH: &str = "/usr/bin/cppcheck";
-const DEFAULT_INFER_PATH: &str = "/usr/bin/infer";
 
 #[derive(Parser)]
 #[clap(name = "Vulnerable Code Dataset Generator")]
 #[clap(author = "Dylan Manuel", version = "1.0")]
 #[clap(about = "Does awesome things", long_about = None)]
-#[clap(group(
-    ArgGroup::new("flawfinder")
-        .required(false)
-        .args(&["flawfinder-path", "disable-flawfinder"]),
-))]
-#[clap(group(
-    ArgGroup::new("cppcheck")
-        .required(false)
-        .args(&["cppcheck-path", "disable-cppcheck"]),
-))]
-#[clap(group(
-    ArgGroup::new("infer")
-        .required(false)
-        .args(&["infer-path", "disable-infer"]),
-))]
 pub struct CommandLineArgs {
-    /// Number of dataset entries
+    /// Number of desired dataset entries
     #[clap(parse(try_from_str = positive_value))]
     entries: i32,
     /// Path to save the dataset at
@@ -33,27 +14,22 @@ pub struct CommandLineArgs {
     /// Ratio of vulnerable code entries to benign code entries
     #[clap(short, long, parse(try_from_str = positive_percentage), value_name = "VULNERABILITY", default_value_t = 0.5)]
     ratio: f32,
-    /// Path to Flawfinder
-    #[clap(long, value_name = "PATH", default_value = DEFAULT_FLAWFINDER_PATH)]
-    flawfinder_path: String,
-    /// Will not use Flawfinder in creating the dataset
+    /// Excludes using Flawfinder as a source code static analyzer
     #[clap(long)]
     disable_flawfinder: bool,
-    /// Path to Cppcheck
-    #[clap(long, value_name = "PATH", default_value = DEFAULT_CPPCHECK_PATH)]
-    cppcheck_path: String,
-    /// Will not use Cppcheck in creating the dataset
+    /// Excludes using Cppcheck as a source code static analyzer
     #[clap(long)]
     disable_cppcheck: bool,
-    /// Path to Infer
-    #[clap(long, value_name = "PATH", default_value = DEFAULT_INFER_PATH)]
-    infer_path: String,
-    /// Will not use Infer in creating the dataset
+    /// Excludes using Infer as a source code static analyzer
     #[clap(long)]
     disable_infer: bool,
+    /// The amount of worker threads scanning for vulnerable code. Each worker
+    /// thread works on one repository at a time, with the work equally divided
     #[clap(short, long, value_name = "AMOUNT", parse(try_from_str = positive_value), default_value_t = 4)]
     worker_threads: i32,
-    #[clap(long, value_name = "KB")]
+    /// An optional size limit in kilobytes on allowing worker threads to only
+    /// clone trending repositories under the limit
+    #[clap(short, long, value_name = "KB")]
     max_repo_size: Option<u32>,
 }
 
@@ -76,6 +52,10 @@ impl CommandLineArgs {
 
     pub fn max_repo_size(&self) -> Option<u32> {
         self.max_repo_size
+    }
+
+    pub fn disable_flawfinder(&self) -> bool {
+        self.disable_flawfinder
     }
 }
 
