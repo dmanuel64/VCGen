@@ -2,17 +2,13 @@ use crate::dataset::vulnerabilities::save_dataset;
 use dataset::vulnerabilities::create_dataset as generate_dataset;
 use git::{search::TrendingRepositories, vulnerability::VulnerableCommits};
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
-use std::{
-    path::Path,
-    sync::Arc,
-    thread::{self, sleep},
-};
+use std::{path::Path, sync::Arc, thread};
 use tempfile::tempdir;
 use vulnerability::tools::Flawfinder;
 mod dataset;
 mod git;
-mod vulnerability;
 mod utils;
+mod vulnerability;
 
 /// Completes a closure with a progress spinner running
 fn with_progress_spinner<F, R>(msg: &'static str, f: F) -> R
@@ -69,14 +65,13 @@ pub fn create_dataset(
                         .and_then(|vc| {
                             vc.vulnerable_code(
                                 &vec![&Flawfinder::default()],
-                                Some(&worker_progress),
                                 Some(worker_quota as usize),
+                                Some(&worker_progress),
                             )
                         })
                         .unwrap_or_else(|err| {
                             worker_progress
                                 .set_message(format!("Could not find vulnerable commits: {err}"));
-                            sleep(core::time::Duration::from_millis(3000));
                             vec![]
                         }),
                 );
@@ -84,7 +79,11 @@ pub fn create_dataset(
                     break;
                 }
             }
-            worker_progress.finish_using_style();
+            if vulnerable_code.len() < worker_quota as usize {
+                worker_progress.abandon_with_message("Failed to reach quota");
+            } else {
+                worker_progress.finish_using_style();
+            }
             vulnerable_code
         }));
         slice_start += slice_size;
@@ -97,9 +96,15 @@ pub fn create_dataset(
         vulnerabilities.extend(worker.join().unwrap());
     }
     // Create dataset
-    let mut df = generate_dataset(vulnerabilities, None);
+    let dataset_progress = ProgressBar::new(vulnerabilities.len() as u64);
+    dataset_progress.set_style(
+        ProgressStyle::default_bar()
+            .template("[{elapsed_precise}] {bar:40.green/yellow} {pos:>7}/{len:7} {wide_msg}"),
+    );
+    let mut df = generate_dataset(vulnerabilities, Some(&dataset_progress));
     println!("{}", &df.head(None));
     save_dataset(&mut df, dataset_path);
+    dataset_progress.finish_using_style();
     println!("{:?}", df.shape());
     Ok(())
 }

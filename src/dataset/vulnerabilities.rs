@@ -1,4 +1,4 @@
-use crate::git::vulnerability::AnalyzedFile;
+use crate::{git::vulnerability::AnalyzedFile, utils::set_optional_message};
 use indicatif::ProgressBar;
 use polars::{
     datatypes::DataType,
@@ -30,6 +30,7 @@ pub fn create_dataset(
     let mut flawfinder_vulnerabilities_col =
         Series::new_empty("Flawfinder Vulnerabilities", &DataType::Utf8);
     let mut flawfinder_cwes_col = Series::new_empty("Flawfinder CWEs", &DataType::Utf8);
+    set_optional_message(progress, "Building vulnerable code dataset");
     Vec::from_iter(vulnerabilities.iter().map(|vulnerability| {
         add_string_to_series(&mut git_url_col, Some(vulnerability.repo_url()));
         add_string_to_series(&mut commit_hash_col, Some(vulnerability.commit_hash()));
