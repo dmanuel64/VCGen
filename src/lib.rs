@@ -40,8 +40,8 @@ pub fn check_dependencies(skip_flawfinder: bool) -> Result<(), String> {
         ))
     } else if !skip_flawfinder && Flawfinder::install_location().is_none() {
         Err(format!(
-            "Flawfinder is not installed. {}{}{}",
-            "Install Flawfinder with\n\nsudo apt-get install flawfinder\n\n",
+            "Flawfinder is not installed. \n{}\n{}\n{}",
+            "Install Flawfinder with sudo apt-get install flawfinder,",
             "Download it from https://dwheeler.com/flawfinder/",
             format!(
                 "Or set the {} environment variable of the path to the Flawfinder executable.",
@@ -223,7 +223,7 @@ impl VCGenerator {
                         .and_then(|vc| {
                             vc.vulnerable_code(
                                 &vec![&Flawfinder::new()],
-                                Some(worker_quota as usize),
+                                Some(worker_quota as usize - worker_progress.position() as usize),
                                 Some(&worker_progress),
                             )
                         })
