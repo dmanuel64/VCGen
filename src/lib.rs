@@ -196,7 +196,7 @@ impl VCGenerator {
             });
         let trending_repo_urls = Arc::new(trending_repos.repos(self.max_repo_size));
         let scanning_progress = Arc::new(MultiProgress::new());
-        let mut worker_threads = vec![];
+        let mut worker_threads = Vec::with_capacity(self.worker_threads as usize);
         for worker_idx in 0..self.worker_threads {
             let worker_quota = self.worker_quota(worker_idx);
             let pb = ProgressBar::new(worker_quota as u64);
@@ -210,7 +210,7 @@ impl VCGenerator {
             let worker_slice = Arc::new(self.worker_slice(worker_idx, trending_repo_urls.to_vec()));
             let policy = self.policy;
             worker_threads.push(thread::spawn(move || {
-                let mut vulnerable_code = vec![];
+                let mut vulnerable_code = Vec::with_capacity(worker_quota as usize);
                 for git_url in worker_slice.iter() {
                     let repo_dir = tempdir().unwrap();
                     vulnerable_code.append(
@@ -246,7 +246,7 @@ impl VCGenerator {
             }));
         }
         // Retrieve vulnerabilities from worker threads
-        let mut vulnerabilities = vec![];
+        let mut vulnerabilities = Vec::with_capacity(self.entries as usize);
         scanning_progress
             .join_and_clear()
             .or_else(|err| Err(err.to_string()))?;
