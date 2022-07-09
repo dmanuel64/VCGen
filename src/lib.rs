@@ -12,6 +12,7 @@ use vulnerability::tools::Flawfinder;
 mod dataset;
 mod git;
 mod vulnerability;
+mod utils;
 
 /// Completes a closure with a progress spinner running
 fn with_progress_spinner<F, R>(msg: &'static str, f: F) -> R
@@ -67,9 +68,9 @@ pub fn create_dataset(
                     &mut VulnerableCommits::new(git_url, &repo_dir, Some(&worker_progress), None)
                         .and_then(|vc| {
                             vc.vulnerable_code(
-                                vec![Box::new(Flawfinder::default())],
-                                Some(worker_quota),
+                                &vec![&Flawfinder::default()],
                                 Some(&worker_progress),
+                                Some(worker_quota as usize),
                             )
                         })
                         .unwrap_or_else(|err| {
@@ -79,10 +80,9 @@ pub fn create_dataset(
                             vec![]
                         }),
                 );
-                if vulnerable_code.len() == worker_quota as usize {
+                if vulnerable_code.len() >= worker_quota as usize {
                     break;
                 }
-                // break;
             }
             worker_progress.finish_using_style();
             vulnerable_code
@@ -97,9 +97,9 @@ pub fn create_dataset(
         vulnerabilities.extend(worker.join().unwrap());
     }
     // Create dataset
-    // vulnerabilities.push(AnalyzedCode::default());
     let mut df = generate_dataset(vulnerabilities, None);
     println!("{}", &df.head(None));
     save_dataset(&mut df, dataset_path);
+    println!("{:?}", df.shape());
     Ok(())
 }
