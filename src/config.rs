@@ -1,4 +1,4 @@
-use clap::Parser;
+use clap::{ArgEnum, Parser};
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -31,6 +31,10 @@ pub struct CommandLineArgs {
     /// clone trending repositories under the limit
     #[clap(short, long, value_name = "KB")]
     max_repo_size: Option<u32>,
+    #[clap(short, long, arg_enum, default_value_t = WorkDivisionStrategy::SUCCESSIVE)]
+    strategy: WorkDivisionStrategy,
+    #[clap(short, long, arg_enum, default_value_t = VulnerableCommitIdentifier::STRONG)]
+    policy: VulnerableCommitIdentifier,
 }
 
 impl CommandLineArgs {
@@ -56,6 +60,37 @@ impl CommandLineArgs {
 
     pub fn disable_flawfinder(&self) -> bool {
         self.disable_flawfinder
+    }
+
+    pub fn strategy(&self) -> WorkDivisionStrategy {
+        self.strategy
+    }
+
+    pub fn policy(&self) -> VulnerableCommitIdentifier {
+        self.policy
+    }
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ArgEnum)]
+pub enum WorkDivisionStrategy {
+    SUCCESSIVE,
+    PERCENTILE,
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ArgEnum)]
+pub enum VulnerableCommitIdentifier {
+    STRONG,
+    MEDIUM,
+    LOW,
+}
+
+impl ToString for VulnerableCommitIdentifier {
+    fn to_string(&self) -> String {
+        match self {
+            Self::STRONG => String::from("strong"),
+            Self::MEDIUM => String::from("medium"),
+            Self::LOW => String::from("low"),
+        }
     }
 }
 

@@ -2,17 +2,17 @@ use crate::dataset::vulnerabilities::save_dataset;
 use dataset::vulnerabilities::create_dataset as generate_dataset;
 use git::{
     search::{github_api_token, TrendingRepositories, GITHUB_API_VAR},
-    vulnerability::{AnalyzedFile, VulnerableCommits},
+    vulnerability::{AnalyzedFile, VulnerableCommitIdentifier, VulnerableCommits},
 };
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use polars::prelude::DataFrame;
 use std::{
     path::{Path, PathBuf},
     sync::Arc,
-    thread::{self, JoinHandle},
+    thread::{self},
 };
 use tempfile::tempdir;
-use utils::{set_optional_message, debug_print};
+use utils::debug_print;
 use vulnerability::tools::{Flawfinder, FLAWFINDER_ENV_VAR};
 mod dataset;
 mod git;
@@ -48,8 +48,19 @@ pub fn check_dependencies(skip_flawfinder: bool) -> Result<(), String> {
                 FLAWFINDER_ENV_VAR
             )
         ))
+    } else if [skip_flawfinder].iter().all(|skipped| *skipped) {
+        Err(format!("You must at least use one static analyzer."))
     } else {
         Ok(())
+    }
+}
+
+pub fn commit_policy(policy: &str) -> VulnerableCommitIdentifier {
+    match policy.to_lowercase().as_str() {
+        "strong" => VulnerableCommitIdentifier::STRONG,
+        "medium" => VulnerableCommitIdentifier::MEDIUM,
+        "low" => VulnerableCommitIdentifier::LOW,
+        _ => panic!("Unknown policy: {}", policy),
     }
 }
 
@@ -57,17 +68,6 @@ pub enum WorkDivisionStrategy {
     SUCCESSIVE,
     PERCENTILE,
     RANDOM,
-}
-
-impl From<&str> for WorkDivisionStrategy {
-    fn from(s: &str) -> Self {
-        match s.to_lowercase().as_str() {
-            "successive" => Self::SUCCESSIVE,
-            "percentile" => Self::PERCENTILE,
-            "random" => Self::RANDOM,
-            _ => panic!("Unknown work division strategy: {}", s),
-        }
-    }
 }
 
 impl Default for WorkDivisionStrategy {
@@ -82,6 +82,7 @@ pub struct VCGenerator {
     vulnerability_ratio: f32,
     worker_threads: i32,
     strategy: WorkDivisionStrategy,
+    policy: VulnerableCommitIdentifier,
     max_repo_size: Option<u32>,
     disable_flawfinder: bool,
     quiet: bool,
@@ -95,6 +96,7 @@ impl VCGenerator {
             vulnerability_ratio: 0.5,
             worker_threads: 4,
             strategy: WorkDivisionStrategy::default(),
+            policy: VulnerableCommitIdentifier::default(),
             max_repo_size: None,
             disable_flawfinder: false,
             quiet: true,
@@ -168,14 +170,16 @@ impl VCGenerator {
     }
 
     fn generate_dataset(&self, vulnerabilities: Vec<AnalyzedFile>) -> DataFrame {
-        let dataset_progress = if self.quiet { None } else { 
-            let pb = ProgressBar::new(vulnerabilities.len() as u64);
-            pb.set_style(
-                ProgressStyle::default_bar()
-                    .template("[{elapsed_precise}] {bar:40.green/yellow} {pos:>7}/{len:7} {wide_msg}"),
-            );
-            Some(pb)
-        };
+        let dataset_progress =
+            if self.quiet {
+                None
+            } else {
+                let pb = ProgressBar::new(vulnerabilities.len() as u64);
+                pb.set_style(ProgressStyle::default_bar().template(
+                    "[{elapsed_precise}] {bar:40.green/yellow} {pos:>7}/{len:7} {wide_msg}",
+                ));
+                Some(pb)
+            };
         let mut df = generate_dataset(vulnerabilities, dataset_progress.as_ref());
         save_dataset(&mut df, &self.dataset_path);
         if let Some(pb) = dataset_progress {
@@ -204,6 +208,7 @@ impl VCGenerator {
             let worker_progress = scanning_progress.add(pb);
             worker_progress.enable_steady_tick(1000);
             let worker_slice = Arc::new(self.worker_slice(worker_idx, trending_repo_urls.to_vec()));
+            let policy = self.policy;
             worker_threads.push(thread::spawn(move || {
                 let mut vulnerable_code = vec![];
                 for git_url in worker_slice.iter() {
@@ -213,7 +218,7 @@ impl VCGenerator {
                             git_url,
                             &repo_dir,
                             Some(&worker_progress),
-                            None,
+                            Some(policy),
                         )
                         .and_then(|vc| {
                             vc.vulnerable_code(
@@ -261,5 +266,15 @@ impl VCGenerator {
         } else {
             self.create_dataset_verbose()
         }
+    }
+
+    pub fn set_strategy(&mut self, strategy: WorkDivisionStrategy) -> &mut Self {
+        self.strategy = strategy;
+        self
+    }
+
+    pub fn set_policy(&mut self, policy: VulnerableCommitIdentifier) -> &mut Self {
+        self.policy = policy;
+        self
     }
 }
