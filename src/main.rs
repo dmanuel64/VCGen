@@ -27,6 +27,18 @@ fn main() -> Result<(), Box<dyn Error>> {
         .set_policy(commit_policy(&args.policy().to_string()))
         .set_quiet(false)
         .create_dataset()?;
-    println!("{}\nProduced a {:?} DataFrame", df.head(None), df.shape());
+    if df.shape().0 < args.entries() as usize {
+        println!(
+            "Note: Vulnerable Code Generator could not generate the desired amount of entries."
+        );
+        println!("Try loosening some of the options such as a lower vulnerable commit policy or increased repository size limit.")
+    }
+    println!(
+        "Dataset saved with {} entries at {}",
+        df.shape().0,
+        args.dataset_file()
+            .to_str()
+            .expect("Could not get path to dataset.")
+    );
     Ok(())
 }

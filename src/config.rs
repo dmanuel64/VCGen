@@ -3,8 +3,8 @@ use std::path::PathBuf;
 
 #[derive(Parser)]
 #[clap(name = "Vulnerable Code Dataset Generator")]
-#[clap(author = "Dylan Manuel", version = "1.0")]
-#[clap(about = "Does awesome things", long_about = None)]
+#[clap(author = "Dylan Manuel", version = "1.0.0")]
+#[clap(about = "Generates a dataset of vulnerable C code from GitHub.com", long_about = None)]
 pub struct CommandLineArgs {
     /// Number of desired dataset entries
     #[clap(parse(try_from_str = positive_value))]
@@ -14,9 +14,9 @@ pub struct CommandLineArgs {
     // Ratio of vulnerable code entries to benign code entries
     // #[clap(short, long, parse(try_from_str = positive_percentage), value_name = "VULNERABILITY", default_value_t = 0.5)]
     // ratio: f32,
-    /// Excludes using Flawfinder as a source code static analyzer
-    #[clap(long)]
-    disable_flawfinder: bool,
+    // Excludes using Flawfinder as a source code static analyzer
+    // #[clap(long)]
+    // disable_flawfinder: bool,
     // Excludes using Cppcheck as a source code static analyzer
     // #[clap(long)]
     // disable_cppcheck: bool,
@@ -25,14 +25,21 @@ pub struct CommandLineArgs {
     // disable_infer: bool,
     /// The amount of worker threads scanning for vulnerable code. Each worker
     /// thread works on one repository at a time, with the work equally divided
+    /// based on the set policy
     #[clap(short, long, value_name = "AMOUNT", parse(try_from_str = positive_value), default_value_t = 4)]
     worker_threads: i32,
-    /// An optional size limit in kilobytes on allowing worker threads to only
-    /// clone trending repositories under the limit
+    /// An optional size limit in kilobytes informing all worker threads to only
+    /// clone trending repositories under the size limit to avoid long cloning times
+    /// for larger repositories
     #[clap(short, long, value_name = "KB")]
     max_repo_size: Option<u32>,
+    /// Determines how the workload is divided among worker threads. A successive strategy
+    /// is where each worker thread gets every other repository, a percentile strategy
+    /// is where each worker thread gets a percentile of the list of repositories
     #[clap(short, long, arg_enum, default_value_t = WorkDivisionStrategy::SUCCESSIVE)]
     strategy: WorkDivisionStrategy,
+    /// Specifies how strict the worker thread should look in commit messages for the
+    /// likelihood of vulnerable code being present
     #[clap(short, long, arg_enum, default_value_t = VulnerableCommitIdentifier::STRONG)]
     policy: VulnerableCommitIdentifier,
 }
@@ -52,10 +59,6 @@ impl CommandLineArgs {
 
     pub fn max_repo_size(&self) -> Option<u32> {
         self.max_repo_size
-    }
-
-    pub fn disable_flawfinder(&self) -> bool {
-        self.disable_flawfinder
     }
 
     pub fn strategy(&self) -> WorkDivisionStrategy {
