@@ -4,7 +4,7 @@ use std::env::var;
 pub const GITHUB_API_VAR: &str = "GITHUB_API_TOKEN";
 
 /// Gets the user's GitHub API token by retrieving the value
-/// set by environment variable GITHUB_API_TOKEN.
+/// set by environment variable [`GITHUB_API_VAR`].
 pub fn github_api_token() -> Option<String> {
     var(GITHUB_API_VAR).ok()
 }

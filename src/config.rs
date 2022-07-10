@@ -11,18 +11,18 @@ pub struct CommandLineArgs {
     entries: i32,
     /// Path to save the dataset at
     dataset_file: PathBuf,
-    /// Ratio of vulnerable code entries to benign code entries
-    #[clap(short, long, parse(try_from_str = positive_percentage), value_name = "VULNERABILITY", default_value_t = 0.5)]
-    ratio: f32,
+    // Ratio of vulnerable code entries to benign code entries
+    // #[clap(short, long, parse(try_from_str = positive_percentage), value_name = "VULNERABILITY", default_value_t = 0.5)]
+    // ratio: f32,
     /// Excludes using Flawfinder as a source code static analyzer
     #[clap(long)]
     disable_flawfinder: bool,
-    /// Excludes using Cppcheck as a source code static analyzer
-    #[clap(long)]
-    disable_cppcheck: bool,
-    /// Excludes using Infer as a source code static analyzer
-    #[clap(long)]
-    disable_infer: bool,
+    // Excludes using Cppcheck as a source code static analyzer
+    // #[clap(long)]
+    // disable_cppcheck: bool,
+    // Excludes using Infer as a source code static analyzer
+    // #[clap(long)]
+    // disable_infer: bool,
     /// The amount of worker threads scanning for vulnerable code. Each worker
     /// thread works on one repository at a time, with the work equally divided
     #[clap(short, long, value_name = "AMOUNT", parse(try_from_str = positive_value), default_value_t = 4)]
@@ -44,10 +44,6 @@ impl CommandLineArgs {
 
     pub fn dataset_file(&self) -> &PathBuf {
         &self.dataset_file
-    }
-
-    pub fn ratio(&self) -> f32 {
-        self.ratio
     }
 
     pub fn worker_threads(&self) -> i32 {
@@ -94,6 +90,7 @@ impl ToString for VulnerableCommitIdentifier {
     }
 }
 
+/// Verifies the argument is a positive integer.
 fn positive_value(arg: &str) -> Result<i32, String> {
     let parsed_value: Result<i32, _> = arg.parse();
     parsed_value
@@ -107,6 +104,7 @@ fn positive_value(arg: &str) -> Result<i32, String> {
         })
 }
 
+/// Verifies the argyment is a positive float decimal between 0 and 1.
 fn positive_percentage(arg: &str) -> Result<f32, String> {
     let parsed_value: Result<f32, _> = arg.parse();
     parsed_value
