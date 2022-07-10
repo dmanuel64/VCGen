@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 #[derive(Parser)]
 #[clap(name = "Vulnerable Code Dataset Generator")]
-#[clap(author = "Dylan Manuel", version = "1.0.0")]
+#[clap(author = "Dylan Manuel", version = "1.0.1")]
 #[clap(about = "Generates a dataset of vulnerable C code from GitHub.com", long_about = None)]
 pub struct CommandLineArgs {
     /// Number of desired dataset entries

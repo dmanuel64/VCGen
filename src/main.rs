@@ -27,6 +27,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         .set_policy(commit_policy(&args.policy().to_string()))
         .set_quiet(false)
         .create_dataset()?;
+    if cfg!(debug_assertions) {
+        // Show sample DataFrame in debug mode
+        println!("{}", df.head(None));
+    }
+    // Print generator results
     if df.shape().0 < args.entries() as usize {
         println!(
             "Note: Vulnerable Code Generator could not generate the desired amount of entries."
